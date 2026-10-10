@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>bench-voxel3d</title>
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <canvas id="game"></canvas>
+
+    <div id="crosshair"></div>
+
+    <div id="hud">
+      <div id="status">connecting…</div>
+      <div id="players"></div>
+      <div id="hotbar"></div>
+      <div id="log"></div>
+      <input id="chat" placeholder="chat, then Enter" autocomplete="off" />
+      <div id="help">
+        click to grab the mouse · WASD move · Space jump · Shift sprint ·
+        1-6 block · left click break · right click place
+      </div>
+    </div>
+
+    <script type="module">
+      import init, { send_chat } from "./voxel_client.js";
+
+      await init();
+
+      const input = document.getElementById("chat");
+      input.addEventListener("keydown", (event) => {
+        if (event.key !== "Enter") return;
+        const text = input.value.trim();
+        if (text) send_chat(text);
+        input.value = "";
+        input.blur();
+      });
+    </script>
+  </body>
+</html>

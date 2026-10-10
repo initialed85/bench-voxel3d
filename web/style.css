@@ -1,0 +1,77 @@
+html,
+body {
+  margin: 0;
+  height: 100%;
+  overflow: hidden;
+  background: #1b1f24;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  color: #e8e8e8;
+}
+
+#game {
+  display: block;
+  width: 100vw;
+  height: 100vh;
+}
+
+#crosshair {
+  position: fixed;
+  left: 50%;
+  top: 50%;
+  width: 10px;
+  height: 10px;
+  margin: -5px 0 0 -5px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.65);
+  pointer-events: none;
+}
+
+#hud {
+  position: fixed;
+  left: 12px;
+  top: 12px;
+  width: 320px;
+  padding: 10px 12px;
+  background: rgba(20, 24, 28, 0.72);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 8px;
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+#status,
+#players,
+#hotbar {
+  margin-bottom: 6px;
+}
+
+#players {
+  color: #9fd0ff;
+}
+
+#hotbar {
+  color: #ffd08a;
+}
+
+#log {
+  color: #c8c8c8;
+  max-height: 120px;
+  overflow: hidden;
+}
+
+#chat {
+  width: 100%;
+  margin-top: 8px;
+  padding: 6px 8px;
+  background: rgba(0, 0, 0, 0.35);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 6px;
+  color: inherit;
+  font: inherit;
+}
+
+#help {
+  margin-top: 8px;
+  color: #8b939c;
+  font-size: 12px;
+}

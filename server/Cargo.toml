@@ -1,0 +1,13 @@
+[package]
+name = "voxel-server"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+voxel-common = { path = "../common" }
+serde = { workspace = true }
+serde_json = { workspace = true }
+tokio = { version = "1", features = ["macros", "rt-multi-thread", "net", "sync", "time", "signal"] }
+tokio-tungstenite = { version = "0.30", features = ["url"] }
+tungstenite = "0.30"
+futures-util = "0.3"
