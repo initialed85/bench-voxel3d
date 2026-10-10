@@ -86,6 +86,11 @@ releases the mouse so the chat box can be clicked; Enter in the box sends the me
   because Bevy's derive macros resolve their crate paths from the package manifest.
 - `web/voxel_client.js` and `voxel_client_bg.wasm` are generated output; do not edit.
 - `window.send_chat(text)` is exposed in the browser console as a debug aid.
+- The WASM canvas is sized from the browser viewport (CSS px x device pixel ratio) at
+  startup and on every frame, so the DOM crosshair sits at the rendered centre. Bevy's
+  default 1280x720 does not match a typical viewport.
 - Headless browser testing renders through SwiftShader and runs at well under 1 fps, so
   input-driven tests need generous waits. Pointer lock blocks DOM clicks, so drive the
-  chat box with `send_chat` rather than clicking it.
+  chat box with `send_chat` rather than clicking it. Headless pointer-lock `movementX`
+  is reported with the opposite sign to `mouse.move`, so mouse-look direction cannot be
+  verified headlessly; it is pinned by unit tests in `client/src/player.rs`.

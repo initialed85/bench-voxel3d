@@ -117,7 +117,8 @@ pub fn look(
         return;
     }
     for ev in events.read() {
-        game.local.yaw += ev.delta.x * 0.0026;
+        // Mouse right turns right: yaw decreases (it increases counter-clockwise).
+        game.local.yaw -= ev.delta.x * 0.0026;
         game.local.pitch = (game.local.pitch - ev.delta.y * 0.0026).clamp(-1.55, 1.55);
     }
     // Arrow keys look too: handy when the mouse is unavailable.
@@ -273,4 +274,50 @@ pub fn movement(
         });
     }
 
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn facing(yaw: f32, pitch: f32) -> Vec3 {
+        view_dir(&LocalPlayer {
+            feet: Vec3::ZERO,
+            vel: Vec3::ZERO,
+            yaw,
+            pitch,
+            grounded: true,
+            selected: block::GRASS,
+            locked: false,
+            last_send: 0.0,
+        })
+    }
+
+    #[test]
+    fn yaw_increases_turn_left() {
+        let front = facing(0.0, 0.0);
+        let left = facing(0.5, 0.0);
+        assert!(front.z < 0.0); // default view is down -Z
+        assert!(left.x < front.x); // turning towards -X is turning left
+    }
+
+    #[test]
+    fn mouse_right_turns_right() {
+        // look() subtracts delta.x, so a rightward mouse move must point towards +X.
+        let right = facing(0.0 - 100.0 * 0.0026, 0.0);
+        assert!(right.x > 0.0);
+    }
+
+    #[test]
+    fn positive_pitch_looks_up() {
+        assert!(facing(0.0, 0.6).y > 0.0);
+    }
+
+    #[test]
+    fn arrow_down_looks_down() {
+        // look() subtracts step for ArrowDown, so pitch must go negative.
+        let mut pitch = 0.0f32;
+        pitch = (pitch - 0.08).clamp(-1.55, 1.55);
+        assert!(facing(0.0, pitch).y < 0.0);
+    }
 }

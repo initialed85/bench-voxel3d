@@ -3,9 +3,47 @@
 use std::collections::{HashMap, HashSet};
 
 use bevy::prelude::*;
+use bevy::window::WindowResolution;
+#[cfg(target_arch = "wasm32")]
+use bevy::window::PrimaryWindow;
 use voxel_common::{block, chunk_index, Block, World, CHUNKS_X, CHUNKS_Y, CHUNKS_Z};
 
 pub const DEFAULT_SEED: i64 = 0x5EED_C0DE_1234_5678;
+
+/// The canvas must match the viewport exactly: winit sizes it from the window
+/// resolution, and the DOM crosshair sits at the viewport centre. Physical pixels
+/// are CSS pixels times the device pixel ratio.
+fn initial_canvas_size() -> (u32, u32) {
+    #[cfg(target_arch = "wasm32")]
+    {
+        let Some(win) = web_sys::window() else {
+            return (1280, 720);
+        };
+        let css_w = win.inner_width().ok().and_then(|v| v.as_f64()).unwrap_or(1280.0);
+        let css_h = win.inner_height().ok().and_then(|v| v.as_f64()).unwrap_or(720.0);
+        let dpr = win.device_pixel_ratio();
+        ((css_w * dpr).round() as u32, (css_h * dpr).round() as u32)
+    }
+    #[cfg(not(target_arch = "wasm32"))]
+    {
+        (1280, 720)
+    }
+}
+
+/// Follow browser resizes.
+#[cfg(target_arch = "wasm32")]
+pub fn fit_canvas(mut windows: Query<&mut Window, With<PrimaryWindow>>) {
+    let Some(mut window) = windows.iter_mut().next() else {
+        return;
+    };
+    let (pw, ph) = initial_canvas_size();
+    if pw > 0 && ph > 0 && (window.resolution.physical_width() != pw || window.resolution.physical_height() != ph) {
+        window.resolution.set_physical_resolution(pw, ph);
+    }
+}
+
+#[cfg(not(target_arch = "wasm32"))]
+pub fn fit_canvas() {}
 
 pub mod hud;
 pub mod mesher;
@@ -101,10 +139,12 @@ pub fn mark_dirty(game: &mut Game, x: i32, y: i32, z: i32) {
 
 pub fn run() {
     let mut app = App::new();
+    let (pw, ph) = initial_canvas_size();
     app.add_plugins(DefaultPlugins.set(WindowPlugin {
         primary_window: Some(Window {
             title: "bench-voxel3d".into(),
             canvas: Some("#game".to_string()),
+            resolution: WindowResolution::new(pw, ph),
             prevent_default_event_handling: false,
             ..default()
         }),
@@ -121,6 +161,7 @@ pub fn run() {
             player::movement,
             player::hotbar,
             player::click,
+            fit_canvas,
             mesher::rebuild,
             net::flush,
             hud::update,

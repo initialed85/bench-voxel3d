@@ -66,12 +66,13 @@ pub fn update(mut game: ResMut<Game>) {
     game.dirty_hud = false;
 
     let status = format!(
-        "{} | {} online | x{:0.1} y{:0.1} z{:0.1} pitch{:0.2}",
+        "{} | {} online | x{:0.1} y{:0.1} z{:0.1} yaw{:0.2} pitch{:0.2}",
         game.name,
         game.roster.len(),
         game.local.feet.x,
         game.local.feet.y,
         game.local.feet.z,
+        game.local.yaw,
         game.local.pitch
     );
     if status != game.last_status {
