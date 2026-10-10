@@ -66,8 +66,8 @@ refresh the page):
 ## Controls
 
 Click to grab the mouse, then: WASD move, Space jump, Shift sprint, 1-6 pick a block,
-left click break, right click place, arrow keys look (useful without a mouse). Chat is
-the DOM input box; Enter sends it.
+left click break, right click place, arrow keys look (useful without a mouse). Escape
+releases the mouse so the chat box can be clicked; Enter in the box sends the message.
 
 ## How it works
 
@@ -85,5 +85,7 @@ the DOM input box; Enter sends it.
 - `bevy` is a top-level dependency in `client/Cargo.toml` (not only target-specific),
   because Bevy's derive macros resolve their crate paths from the package manifest.
 - `web/voxel_client.js` and `voxel_client_bg.wasm` are generated output; do not edit.
+- `window.send_chat(text)` is exposed in the browser console as a debug aid.
 - Headless browser testing renders through SwiftShader and runs at well under 1 fps, so
-  input-driven tests need generous waits.
+  input-driven tests need generous waits. Pointer lock blocks DOM clicks, so drive the
+  chat box with `send_chat` rather than clicking it.

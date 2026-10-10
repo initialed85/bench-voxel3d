@@ -117,6 +117,7 @@ pub fn run() {
         Update,
         (
             player::look,
+            player::release,
             player::movement,
             player::hotbar,
             player::click,

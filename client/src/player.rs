@@ -136,6 +136,22 @@ pub fn look(
     }
 }
 
+/// Escape releases the mouse so the chat box can be reached.
+pub fn release(
+    mut game: ResMut<Game>,
+    keys: Res<ButtonInput<KeyCode>>,
+    mut cursor: Query<&mut CursorOptions>,
+) {
+    if !keys.just_pressed(KeyCode::Escape) {
+        return;
+    }
+    game.local.locked = false;
+    for mut c in cursor.iter_mut() {
+        c.grab_mode = CursorGrabMode::None;
+        c.visible = true;
+    }
+}
+
 pub fn hotbar(mut game: ResMut<Game>, keys: Res<ButtonInput<KeyCode>>) {
     for (i, key) in [
         KeyCode::Digit1,
