@@ -59,6 +59,12 @@ i've exposed it to the internet via my kube cluster- thing is its trying to conn
 also, i'm finding the crosshair and the "hit zone" for breaking blocks don't agree- hit zone seems to be halfway between crosshair and bottom of the viewport
 ```
 
+---
+
+```
+the bundle the web client downloads is huuuuuge; like 200+ MB; how can we get that down?
+```
+
 # bench-voxel3d
 
 Multiplayer 3D voxel first-person shooter. Rust + Bevy on the client, WebSockets to an
