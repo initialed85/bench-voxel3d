@@ -65,6 +65,22 @@ also, i'm finding the crosshair and the "hit zone" for breaking blocks don't agr
 the bundle the web client downloads is huuuuuge; like 200+ MB; how can we get that down?
 ```
 
+```
+the bundle the web client downloads is huuuuuge; like 200+ MB; how can we get that down?
+```
+
+---
+
+```
+i've joined from two browser sessions on the same machine, but it's like \"who is in the game\" is not consistent; one has \"player-70 (you), player-71\" and the other has \"player, player-71 (you)\" but they don't seem to be able to physically see each other
+```
+
+---
+
+```
+belay that, i can in fact see the other player- just some oddities with the player list i think. also the chat doesn't seem to work
+```
+
 # bench-voxel3d
 
 Multiplayer 3D voxel first-person shooter. Rust + Bevy on the client, WebSockets to an

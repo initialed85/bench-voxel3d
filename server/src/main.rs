@@ -30,6 +30,13 @@ struct State {
     next_id: u64,
 }
 
+fn send_all(state: &State, msg: &ServerMsg) {
+    let text = serde_json::to_string(msg).unwrap();
+    for client in state.clients.values() {
+        let _ = client.tx.send(Message::text(text.clone()));
+    }
+}
+
 fn send(state: &State, msg: &ServerMsg, skip: u64) {
     let text = serde_json::to_string(msg).unwrap();
     for client in state.clients.values() {
@@ -162,9 +169,10 @@ async fn handle(stream: tokio::net::TcpStream, addr: SocketAddr, state: Arc<Mute
         };
 
         match parsed {
-            ClientMsg::Hello { name } => {
-                state.lock().unwrap().clients.get_mut(&id).unwrap().name = name;
-            }
+            // The name is server-assigned (player-{id}); a client-supplied name in Hello
+            // or Chat must not overwrite it, otherwise joiners disagree on each other's
+            // display name.
+            ClientMsg::Hello { .. } => {}
             ClientMsg::Move { pos, yaw, pitch } => {
                 state.lock().unwrap().clients.get_mut(&id).unwrap().pos = pos;
                 let out = ServerMsg::Move { id, pos, yaw, pitch };
@@ -186,13 +194,13 @@ async fn handle(stream: tokio::net::TcpStream, addr: SocketAddr, state: Arc<Mute
                 let out = ServerMsg::Block { pos, block: b };
                 send(&state.lock().unwrap(), &out, id);
             }
-            ClientMsg::Chat { name, text } => {
-                state.lock().unwrap().clients.get_mut(&id).unwrap().name = name;
+            ClientMsg::Chat { text, .. } => {
+                // Everyone, including the sender, so the sender sees their own message.
                 let out = ServerMsg::Chat {
                     name: state.lock().unwrap().clients[&id].name.clone(),
                     text,
                 };
-                send(&state.lock().unwrap(), &out, id);
+                send_all(&state.lock().unwrap(), &out);
             }
         }
     }
