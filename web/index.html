@@ -27,6 +27,8 @@
       import init, { send_chat } from "./voxel_client.js";
 
       await init();
+      // Exposed for console/debug use as well as the chat box below.
+      window.send_chat = send_chat;
 
       const input = document.getElementById("chat");
       input.addEventListener("keydown", (event) => {
