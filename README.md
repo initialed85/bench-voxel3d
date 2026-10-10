@@ -79,6 +79,9 @@ authoritative Tokio server, and the same client compiled to WASM for the browser
 - `rust-toolchain.toml` pins Rust 1.97.1.
 - `rustup target add wasm32-unknown-unknown`
 - `wasm-bindgen-cli` 0.2.129 on the PATH (`cargo install wasm-bindgen-cli --version 0.2.129`)
+- `wasm-opt` (binaryen) to shrink the release bundle. `cargo install wasm-opt` fails to
+  link on this box; grab the prebuilt tarball from the binaryen releases and put
+  `wasm-opt` on the PATH. `build.sh` skips it if absent.
 - `entr` for the rebuild-on-change loop (`apt install entr`)
 - `python3` for the static file server
 
@@ -90,14 +93,29 @@ authoritative Tokio server, and the same client compiled to WASM for the browser
 ./scripts/test.sh
 ```
 
-Success: `test result: ok` for `voxel-common` (5 tests) and `voxel-client` (4 raycast
-tests), `voxel-server` builds, `wrote web/voxel_client.js`, then `ok`.
+Success: `test result: ok` for `voxel-common` (5 tests) and `voxel-client` (10 tests),
+`voxel-server` builds, `wrote web/voxel_client_bg.wasm (18M)`, then `ok`.
 
 **Run the server** (listens on `:3001`, world 64x48x64, seed `0x5eedc0de12345678`):
 
 ```sh
 cargo run -p voxel-server
 ```
+
+**Bundle size** — `build.sh` builds `--release` by default. Measured on this project:
+
+| Build | wasm | gzipped |
+| --- | --- | --- |
+| debug | 218 MB | — |
+| release, `opt-level = 3` | 30 MB | 7.5 MB |
+| release, `opt-level = "z"` | 23 MB | 7.4 MB |
+| release, `opt-level = "z"` + `wasm-opt -Oz` | 18 MB | 5.9 MB |
+
+The code section is ~19 MB of Bevy; embedded strings are only ~1 MB, so trimming Bevy
+features does little. Serve with `Content-Encoding: gzip` (or brotli) so the browser
+transfers ~6 MB, not 18. `python3 -m http.server` does not compress; your ingress
+should. Use `scripts/build.sh --debug` for a fast iteration build when size does not
+matter.
 
 **Serve the browser client** (serves `web/` on `PORT`, default 8080):
 
