@@ -85,16 +85,23 @@ fn ws_url() -> String {
     {
         let target = query_param("server");
         let loc = web_sys::window().map(|w| w.location());
-        let host = loc.as_ref().and_then(|l| l.hostname().ok()).unwrap_or_default();
-        let proto = loc
-            .map(|l| if l.protocol().ok().as_deref() == Some("https:") { "wss:" } else { "ws:" })
-            .unwrap_or("ws:");
-        let target = if target.is_empty() {
-            if host.is_empty() { "localhost:3001".to_string() } else { format!("{host}:3001") }
+        let https = loc.as_ref().and_then(|l| l.protocol().ok()).as_deref() == Some("https:");
+        let proto = if https { "wss:" } else { "ws:" };
+
+        if !target.is_empty() {
+            // Explicit override, e.g. ?server=host:3001
+            format!("{proto}//{target}/ws")
+        } else if https {
+            // Behind a TLS proxy the game server is reached through the same origin, so
+            // keep the origin's host and port (location.host omits the default 443).
+            let host = loc.as_ref().and_then(|l| l.host().ok()).unwrap_or_default();
+            format!("{proto}//{host}/ws")
         } else {
-            target
-        };
-        format!("{proto}//{target}/ws")
+            // Plain http dev server: the game server is a separate port.
+            let host = loc.as_ref().and_then(|l| l.hostname().ok()).unwrap_or_default();
+            let host = if host.is_empty() { "localhost" } else { &host };
+            format!("{proto}//{host}:3001/ws")
+        }
     }
     #[cfg(not(target_arch = "wasm32"))]
     {
@@ -108,6 +115,8 @@ pub fn connect(_game: ResMut<Game>) {
     }
     let url = ws_url();
     hud::set("status", &format!("connecting to {url}"));
+    #[cfg(target_arch = "wasm32")]
+    web_sys::console::log_1(&format!("connecting to {url}").into());
 
     #[cfg(target_arch = "wasm32")]
     connect_wasm(&url);
@@ -290,6 +299,7 @@ pub fn poll(
             } => {
                 game.my_id = id;
                 game.name = name.clone();
+                hud::log(&format!("connected as {name} seed {seed} spawn {:.0} {:.0} {:.0}", spawn[0], spawn[1], spawn[2]));
                 game.roster.insert(id, name);
                 game.world = World::generate(seed);
                 game.dirty = (0..crate::all_chunks()).collect();
@@ -303,6 +313,7 @@ pub fn poll(
                 }
             }
             ServerMsg::Spawn { player } => {
+                hud::log(&format!("{} joined", player.name));
                 game.roster.insert(player.id, player.name.clone());
                 if player.id != game.my_id {
                     spawn_avatar(&mut game, &mut commands, &mut materials, &player);
@@ -327,6 +338,7 @@ pub fn poll(
                 }
             }
             ServerMsg::Block { pos, block: b } => {
+                hud::log(&format!("block {} {} {} -> {}", pos[0], pos[1], pos[2], b));
                 if game.world.set(pos[0], pos[1], pos[2], b) {
                     mark_dirty(&mut game, pos[0], pos[1], pos[2]);
                 }

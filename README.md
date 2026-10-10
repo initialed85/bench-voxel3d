@@ -127,8 +127,12 @@ refresh the page):
 ## Controls
 
 Click to grab the mouse, then: WASD move, Space jump, Shift sprint, 1-6 pick a block,
-left click break, right click place, arrow keys look (useful without a mouse). Escape
+left click break, right click place, arrow keys look (useful without a mouse). E breaks
+and Q places without the mouse, so editing works before the first click. Escape
 releases the mouse so the chat box can be clicked; Enter in the box sends the message.
+
+A small magenta sphere marks the exact point the crosshair is aiming at, so the hit zone
+is visible in the world.
 
 ## How it works
 
@@ -147,6 +151,10 @@ releases the mouse so the chat box can be clicked; Enter in the box sends the me
   because Bevy's derive macros resolve their crate paths from the package manifest.
 - `web/voxel_client.js` and `voxel_client_bg.wasm` are generated output; do not edit.
 - `window.send_chat(text)` is exposed in the browser console as a debug aid.
+- The voxel DDA returns the distance to the face it entered, so the aim marker sits on
+  the crosshair ray. `t_max` for a negative axis is `origin - boundary`, not
+  `boundary - origin`; getting this sign backwards yields a negative distance and puts
+  the aim point behind the camera.
 - The WASM canvas is sized from the browser viewport (CSS px x device pixel ratio) at
   startup and on every frame, so the DOM crosshair sits at the rendered centre. Bevy's
   default 1280x720 does not match a typical viewport.

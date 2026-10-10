@@ -65,8 +65,8 @@ pub fn update(mut game: ResMut<Game>) {
     }
     game.dirty_hud = false;
 
-    let status = format!(
-        "{} | {} online | x{:0.1} y{:0.1} z{:0.1} yaw{:0.2} pitch{:0.2}",
+    let mut status = format!(
+        "{} | {} online | x{:0.2} y{:0.2} z{:0.2} yaw{:0.2} pitch{:0.2}",
         game.name,
         game.roster.len(),
         game.local.feet.x,
@@ -75,6 +75,12 @@ pub fn update(mut game: ResMut<Game>) {
         game.local.yaw,
         game.local.pitch
     );
+    if game.aim_visible {
+        status.push_str(&format!(
+            " aim {:0.2} {:0.2} {:0.2}",
+            game.aim_point.x, game.aim_point.y, game.aim_point.z
+        ));
+    }
     if status != game.last_status {
         game.last_status = status.clone();
         set("status", &status);

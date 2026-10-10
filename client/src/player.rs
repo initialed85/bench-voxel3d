@@ -70,9 +70,36 @@ fn apply_edit(game: &mut Game, cell: [i32; 3], b: u8) {
     });
 }
 
+/// Show which cell the aim ray currently targets.
+pub fn aim(mut game: ResMut<Game>, mut q: Query<(&mut Transform, &mut Visibility)>) {
+    let Some(entity) = game.highlight else {
+        return;
+    };
+    let Ok((mut t, mut v)) = q.get_mut(entity) else {
+        return;
+    };
+    let origin = game.local.feet + Vec3::Y * EYE;
+    let dir = view_dir(&game.local);
+    match raycast::raycast(&game.world, origin, dir, REACH) {
+        Some((_, _, dist)) if dist > 1e-4 => {
+            // The exact point the crosshair is aimed at, not the centre of the cell.
+            let p = origin + dir * dist;
+            t.translation = p;
+            *v = Visibility::Visible;
+            game.aim_point = p;
+            game.aim_visible = true;
+        }
+        _ => {
+            *v = Visibility::Hidden;
+            game.aim_visible = false;
+        }
+    }
+}
+
 pub fn click(
     mut game: ResMut<Game>,
     mouse: Res<ButtonInput<MouseButton>>,
+    keys: Res<ButtonInput<KeyCode>>,
     mut cursor: Query<&mut CursorOptions>,
 ) {
     if hud::input_focused() {
@@ -87,19 +114,22 @@ pub fn click(
         game.local.locked = true;
         return;
     }
-    if !game.local.locked {
+    // Keyboard editing works without pointer lock, so it is usable before the first click.
+    let breaking = keys.just_pressed(KeyCode::KeyE) || (game.local.locked && mouse.just_pressed(MouseButton::Left));
+    let placing = keys.just_pressed(KeyCode::KeyQ) || (game.local.locked && mouse.just_pressed(MouseButton::Right));
+    if !(breaking || placing) {
         return;
     }
 
     let origin = game.local.feet + Vec3::Y * EYE;
     let dir = view_dir(&game.local);
 
-    if mouse.just_pressed(MouseButton::Left) {
-        if let Some((cell, _)) = raycast::raycast(&game.world, origin, dir, REACH) {
+    if breaking {
+        if let Some((cell, _, _)) = raycast::raycast(&game.world, origin, dir, REACH) {
             apply_edit(&mut game, cell, block::AIR);
         }
-    } else if mouse.just_pressed(MouseButton::Right) {
-        if let Some((_, prev)) = raycast::raycast(&game.world, origin, dir, REACH) {
+    } else if placing {
+        if let Some((_, prev, _)) = raycast::raycast(&game.world, origin, dir, REACH) {
             if !overlaps_player(game.local.feet, prev) {
                 let selected = game.local.selected;
                 apply_edit(&mut game, prev, selected);

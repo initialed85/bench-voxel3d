@@ -62,6 +62,9 @@ pub struct Game {
     pub cube: Handle<Mesh>,
     pub white: Handle<StandardMaterial>,
     pub camera: Option<Entity>,
+    pub highlight: Option<Entity>,
+    pub aim_point: Vec3,
+    pub aim_visible: bool,
     pub local: LocalPlayer,
     pub my_id: u64,
     pub name: String,
@@ -96,6 +99,9 @@ impl Default for Game {
             cube: Handle::default(),
             white: Handle::default(),
             camera: None,
+            highlight: None,
+            aim_point: Vec3::ZERO,
+            aim_visible: false,
             local: LocalPlayer {
                 feet: Vec3::ZERO,
                 vel: Vec3::ZERO,
@@ -155,18 +161,11 @@ pub fn run() {
     app.add_systems(Update, (net::connect, net::poll).chain());
     app.add_systems(
         Update,
-        (
-            player::look,
-            player::release,
-            player::movement,
-            player::hotbar,
-            player::click,
-            fit_canvas,
-            mesher::rebuild,
-            net::flush,
-            hud::update,
-        )
-            .chain(),
+        (player::look, player::release, player::movement, player::hotbar, fit_canvas).chain(),
+    );
+    app.add_systems(
+        Update,
+        (player::aim, player::click, mesher::rebuild, net::flush, hud::update).chain(),
     );
 
     app.run();
@@ -192,6 +191,23 @@ fn setup(mut commands: Commands, mut meshes: ResMut<Assets<Mesh>>, mut materials
         ))
         .id();
     game.camera = Some(camera);
+
+    // Marks the cell the aim ray will edit, so the crosshair and the hit zone cannot
+    // drift apart unnoticed.
+    let highlight = commands
+        .spawn((
+            Mesh3d(meshes.add(Sphere::new(0.16))),
+            MeshMaterial3d(materials.add(StandardMaterial {
+                base_color: Color::srgb(1.0, 0.0, 1.0),
+                alpha_mode: AlphaMode::Opaque,
+                unlit: true,
+                ..default()
+            })),
+            Visibility::Hidden,
+            Transform::default(),
+        ))
+        .id();
+    game.highlight = Some(highlight);
 
     commands.spawn((
         DirectionalLight {

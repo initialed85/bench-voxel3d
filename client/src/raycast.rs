@@ -3,9 +3,9 @@ use voxel_common::World;
 
 pub type Cell = [i32; 3];
 
-/// Amanatides & Woo voxel DDA. Returns the hit cell and the cell the ray came
-/// from (where a block would be placed).
-pub fn raycast(world: &World, origin: Vec3, dir: Vec3, max_dist: f32) -> Option<(Cell, Cell)> {
+/// Amanatides & Woo voxel DDA. Returns the hit cell, the cell the ray came from
+/// (where a block would be placed), and the distance to the face it entered.
+pub fn raycast(world: &World, origin: Vec3, dir: Vec3, max_dist: f32) -> Option<(Cell, Cell, f32)> {
     let mut cell = [
         origin.x.floor() as i32,
         origin.y.floor() as i32,
@@ -25,21 +25,21 @@ pub fn raycast(world: &World, origin: Vec3, dir: Vec3, max_dist: f32) -> Option<
         if dir.x > 0.0 {
             (cell[0] as f32 + 1.0 - origin.x) * delta[0]
         } else if dir.x < 0.0 {
-            (cell[0] as f32 - origin.x) * delta[0]
+            (origin.x - cell[0] as f32) * delta[0]
         } else {
             f32::INFINITY
         },
         if dir.y > 0.0 {
             (cell[1] as f32 + 1.0 - origin.y) * delta[1]
         } else if dir.y < 0.0 {
-            (cell[1] as f32 - origin.y) * delta[1]
+            (origin.y - cell[1] as f32) * delta[1]
         } else {
             f32::INFINITY
         },
         if dir.z > 0.0 {
             (cell[2] as f32 + 1.0 - origin.z) * delta[2]
         } else if dir.z < 0.0 {
-            (cell[2] as f32 - origin.z) * delta[2]
+            (origin.z - cell[2] as f32) * delta[2]
         } else {
             f32::INFINITY
         },
@@ -50,7 +50,7 @@ pub fn raycast(world: &World, origin: Vec3, dir: Vec3, max_dist: f32) -> Option<
 
     while t <= max_dist {
         if world.solid(cell[0], cell[1], cell[2]) {
-            return Some((cell, prev));
+            return Some((cell, prev, t));
         }
         prev = cell;
         if t_max[0] < t_max[1] && t_max[0] < t_max[2] {
@@ -91,7 +91,7 @@ mod tests {
     #[test]
     fn ray_hits_block_below_origin() {
         let w = flat_world();
-        let (cell, prev) = raycast(&w, Vec3::new(10.5, 25.0, 10.5), Vec3::new(0.0, -1.0, 0.0), 20.0).unwrap();
+        let (cell, prev, _) = raycast(&w, Vec3::new(10.5, 25.0, 10.5), Vec3::new(0.0, -1.0, 0.0), 20.0).unwrap();
         assert_eq!(cell, [10, 20, 10]);
         assert_eq!(prev, [10, 21, 10]);
     }
@@ -111,8 +111,26 @@ mod tests {
     #[test]
     fn ray_hits_side_and_reports_placement_cell() {
         let w = flat_world();
-        let (cell, prev) = raycast(&w, Vec3::new(6.5, 20.5, 10.5), Vec3::new(1.0, 0.0, 0.0), 20.0).unwrap();
+        let (cell, prev, _) = raycast(&w, Vec3::new(6.5, 20.5, 10.5), Vec3::new(1.0, 0.0, 0.0), 20.0).unwrap();
         assert_eq!(cell, [10, 20, 10]);
         assert_eq!(prev, [9, 20, 10]);
+    }
+
+    #[test]
+    fn hit_distance_is_positive_and_on_the_face() {
+        let w = flat_world();
+        let (cell, _, dist) = raycast(&w, Vec3::new(10.5, 25.0, 10.5), Vec3::new(0.0, -1.0, 0.0), 20.0).unwrap();
+        assert!(dist > 0.0, "distance must be forward along the ray, got {dist}");
+        let p = Vec3::new(10.5, 25.0, 10.5) + Vec3::new(0.0, -1.0, 0.0) * dist;
+        assert!((p.y - (cell[1] as f32 + 1.0)).abs() < 1e-4);
+        assert!((dist - 4.0).abs() < 1e-4);
+    }
+
+    #[test]
+    fn negative_axis_distance_is_positive() {
+        let w = flat_world();
+        let (cell, _, dist) = raycast(&w, Vec3::new(10.5, 20.5, 14.5), Vec3::new(0.0, 0.0, -1.0), 20.0).unwrap();
+        assert_eq!(cell, [10, 20, 10]);
+        assert!((dist - 3.5).abs() < 1e-4, "expected the z=11 face, got {dist}");
     }
 }
