@@ -132,9 +132,11 @@ pub fn run() {
 }
 
 fn setup(mut commands: Commands, mut meshes: ResMut<Assets<Mesh>>, mut materials: ResMut<Assets<StandardMaterial>>) {
-    let mut game = Game::default();
-    game.white = materials.add(StandardMaterial::default());
-    game.cube = meshes.add(Cuboid::new(0.6, 1.8, 0.6));
+    let mut game = Game {
+        white: materials.add(StandardMaterial::default()),
+        cube: meshes.add(Cuboid::new(0.6, 1.8, 0.6)),
+        ..Default::default()
+    };
 
     let camera = commands
         .spawn((
