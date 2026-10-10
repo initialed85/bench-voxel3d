@@ -1,5 +1,66 @@
 # bench-voxel3d
 
+Running [Niko1221/Strata](https://github.com/Niko1221/Strata)
+
+```shell
+./Strata/engine/strata --serve --pack ./Strata-data/packs/swift-iq2_xs --native ./Strata-data/models/swift-IQ2_XS/Swift-Qwen3.8-Flash-Next-GSQ-RCO-IQ2_XS-00001-of-00002.gguf --ple-gguf ./Strata-data/models/swift-IQ2_XS/Swift-Qwen3.8-Flash-Next-GSQ-RCO-IQ2_XS-00001-of-00002.gguf --expert-profile ./Strata/data/expert-profile.bin --expert-cache auto --prefill auto --spec 4 --spec-min-p 0.5 --mtp ./Strata-data/mtp/rt --max-context 131072 --kv int8
+```
+
+- GPU: AMD Radeon RX 9070 XT, 16 GB
+- CPU: AMD Ryzen 5 5600X 6-Core Processor, 12 threads
+- RAM: 48GB
+  - 2 x 16GB 2133 MT/s (Corsair)
+  - 2 x 8GB 2133 MT/s (GEIL)
+- SSD: EDILOCA EN680E 1TB NVMe
+
+## Prompts
+
+```
+hi mate
+
+can you whip me up a quick rust bevy wasm websocket multiplayer 3d voxel-based first-person shooter?
+```
+
+---
+
+```
+nice, nice- any chance you can re-run it on 0.0.0.0 so i can sniff it from an external machine? as you've pointed out, no display at the moment locally
+```
+
+---
+
+```
+just been testing it out from another machine- it's working fairly well off the bat
+
+some things to fix: horizontal mouse movements are inverted (vertical is good) and the blocks are too high to jump on to
+```
+
+---
+
+```
+correction, blocks are not too high to jump on to- they're goo
+```
+
+---
+
+```
+crosshair isn't central btw; it's like a quarter to bottom right
+```
+
+---
+
+```
+i've exposed it to the internet via my kube cluster- thing is its trying to connect to wss://voxel3d.dev.initialed85.cc:3001/ws; can we have some logic that's like "if protocol is https, use the port from the origin, don't use 3001"
+```
+
+---
+
+```
+also, i'm finding the crosshair and the "hit zone" for breaking blocks don't agree- hit zone seems to be halfway between crosshair and bottom of the viewport
+```
+
+# bench-voxel3d
+
 Multiplayer 3D voxel first-person shooter. Rust + Bevy on the client, WebSockets to an
 authoritative Tokio server, and the same client compiled to WASM for the browser.
 
