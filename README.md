@@ -1,5 +1,25 @@
 # bench-voxel3d
 
+Live: https://voxel3d.dev.initialed85.cc — one container on port 3001 serving `web/`
+and `/ws`, running in `home-dev` (Argo CD app `voxel3d`, manifests in
+`home-ops/clusters/dev/applications/voxel3d`).
+
+## Ship it
+
+```sh
+./build-tag-and-push.sh      # scripts/build.sh + cargo build --release -p voxel-server,
+                             # then docker build + push -> initialed85/voxel3d:latest (+ :<git-sha>)
+```
+
+The server serves the client itself now (`VOXEL_WEB`, default `web/`); `scripts/build.sh`
+also writes `voxel_client_bg.wasm.gz` and the server hands that out to browsers that
+accept gzip, which matters because the raw bundle is huge.
+
+```sh
+curl -s -o /dev/null -w "%{http_code}\n" https://voxel3d.dev.initialed85.cc/
+kubectl --context home-dev -n voxel3d logs deploy/voxel3d --tail=5   # "+ <ip> as #1"
+```
+
 Running [Niko1221/Strata](https://github.com/Niko1221/Strata)
 
 ```shell
@@ -131,18 +151,20 @@ cargo run -p voxel-server
 
 The code section is ~19 MB of Bevy; embedded strings are only ~1 MB, so trimming Bevy
 features does little. Serve with `Content-Encoding: gzip` (or brotli) so the browser
-transfers ~6 MB, not 18. `python3 -m http.server` does not compress; your ingress
-should. Use `scripts/build.sh --debug` for a fast iteration build when size does not
-matter.
+transfers ~6 MB, not 18: `scripts/build.sh` writes `voxel_client_bg.wasm.gz` next to the
+bundle and `voxel-server` hands it out whenever the browser accepts gzip. Use
+`scripts/build.sh --debug` for a fast iteration build when size does not matter.
 
-**Serve the browser client** (serves `web/` on `PORT`, default 8080):
+**Serve the browser client** (one process, one port: `web/` and `/ws` on `PORT`,
+default 3001):
 
 ```sh
-./scripts/serve.sh
+cargo run -p voxel-server
 ```
 
-Open `http://localhost:8080`. The client connects to the host it was served from on
-`:3001`. Use `?name=alice` to name yourself and `?pitch=-1.2` to start looking down
+Open `http://localhost:3001`. Set `VOXEL_WEB` for the file root (default `web/`) and
+`VOXEL_PORT`/`PORT` for the port. `./scripts/serve.sh` is the older split path — files on
+`PORT` (default 8080) through `python3 -m http.server`, sim on `:3001`. Use `?name=alice` to name yourself and `?pitch=-1.2` to start looking down
 (debug aid).
 
 **Native client** (windowed build, connects to `ws://localhost:3001/ws`; override with
@@ -153,7 +175,7 @@ must be set, otherwise winit fails at startup.
 cargo run -p voxel-client --bin voxel-client
 ```
 
-**Rebuild the WASM bundle on every source change** (run alongside `serve.sh`, then
+**Rebuild the WASM bundle on every source change** (run alongside the server, then
 refresh the page):
 
 ```sh

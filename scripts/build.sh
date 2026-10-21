@@ -23,4 +23,5 @@ if [[ "$profile" == release ]] && command -v wasm-opt >/dev/null; then
         web/voxel_client_bg.wasm -o web/voxel_client_bg.wasm
     echo "wrote web/voxel_client_bg.wasm ($(du -h web/voxel_client_bg.wasm | cut -f1))"
 fi
+gzip -9 -k -f web/voxel_client_bg.wasm
 echo "wrote web/voxel_client.js"
