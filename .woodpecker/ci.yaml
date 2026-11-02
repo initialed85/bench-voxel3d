@@ -42,6 +42,11 @@ steps:
       # below compiles the client for wasm32 properly, which is the check that means something.
       - cargo test --workspace --exclude voxel-client
       - PATH="$PWD/tools:$PATH" scripts/build.sh
+      # scripts/build.sh only builds the wasm client, unlike bench-asteroids' build.sh which builds
+      # both halves, so the server had never been compiled in release here at all. It is the thing that
+      # actually runs, so build it rather than assert on a path nothing produces (pipeline 5 failed with
+      # "ls: cannot access 'target/release/voxel-server'").
+      - cargo build --release -p voxel-server
       - ls -l web/voxel_client_bg.wasm target/release/voxel-server
 
 when:
