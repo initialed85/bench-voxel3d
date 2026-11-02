@@ -17,8 +17,7 @@ pub fn chunk_index(x: u32, y: u32, z: u32) -> u32 {
 }
 
 pub fn hash2(x: i64, y: i64, seed: i64) -> i64 {
-    let mut h = (x as u64)
-        .wrapping_mul(0x9E3779B97F4A7C15)
+    let mut h = (x as u64).wrapping_mul(0x9E3779B97F4A7C15)
         ^ (y as u64).wrapping_mul(0xC2B2AE3D27D4EB4F)
         ^ (seed as u64).wrapping_mul(0x165667B19E3779F9);
     h ^= h >> 33;
@@ -72,7 +71,8 @@ impl World {
             for z in 1..WORLD_Z - 1 {
                 let h = hash2(x as i64, z as i64, seed ^ 0x5BD1E995);
                 if (h & 0xFF) > 225 {
-                    let ground = 10.0 + ((h & 0xFFFF) as f64 / 65535.0) * 14.0
+                    let ground = 10.0
+                        + ((h & 0xFFFF) as f64 / 65535.0) * 14.0
                         + (x as f64 * 0.11).sin() * 2.0
                         + (z as f64 * 0.13).cos() * 2.0;
                     let y = (ground.max(1.0)) as u32;
@@ -86,7 +86,8 @@ impl World {
                         for dz in -2i32..=2 {
                             for dy in 4..=6 {
                                 let (nx, nz) = (x as i32 + dx, z as i32 + dz);
-                                if nx < 0 || nz < 0 || nx >= WORLD_X as i32 || nz >= WORLD_Z as i32 {
+                                if nx < 0 || nz < 0 || nx >= WORLD_X as i32 || nz >= WORLD_Z as i32
+                                {
                                     continue;
                                 }
                                 let i = idx(nx as u32, dy, nz as u32);

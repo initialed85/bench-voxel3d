@@ -48,7 +48,12 @@ fn overlaps_player(feet: Vec3, cell: [i32; 3]) -> bool {
     let y1 = (feet.y + HEIGHT).floor() as i32;
     let z0 = (feet.z - HALF).floor() as i32;
     let z1 = (feet.z + HALF).floor() as i32;
-    cell[0] >= x0 && cell[0] <= x1 && cell[1] >= y0 && cell[1] <= y1 && cell[2] >= z0 && cell[2] <= z1
+    cell[0] >= x0
+        && cell[0] <= x1
+        && cell[1] >= y0
+        && cell[1] <= y1
+        && cell[2] >= z0
+        && cell[2] <= z1
 }
 
 fn apply_edit(game: &mut Game, cell: [i32; 3], b: u8) {
@@ -115,8 +120,10 @@ pub fn click(
         return;
     }
     // Keyboard editing works without pointer lock, so it is usable before the first click.
-    let breaking = keys.just_pressed(KeyCode::KeyE) || (game.local.locked && mouse.just_pressed(MouseButton::Left));
-    let placing = keys.just_pressed(KeyCode::KeyQ) || (game.local.locked && mouse.just_pressed(MouseButton::Right));
+    let breaking = keys.just_pressed(KeyCode::KeyE)
+        || (game.local.locked && mouse.just_pressed(MouseButton::Left));
+    let placing = keys.just_pressed(KeyCode::KeyQ)
+        || (game.local.locked && mouse.just_pressed(MouseButton::Right));
     if !(breaking || placing) {
         return;
     }
@@ -233,7 +240,11 @@ pub fn movement(
     let fwd = Vec3::new(-yaw.sin(), 0.0, -yaw.cos());
     let right = Vec3::new(yaw.cos(), 0.0, -yaw.sin());
     let wish = fwd * forward + right * strafe;
-    let speed = if keys.pressed(KeyCode::ShiftLeft) { SPRINT } else { SPEED };
+    let speed = if keys.pressed(KeyCode::ShiftLeft) {
+        SPRINT
+    } else {
+        SPEED
+    };
     if wish.length_squared() > 0.0 {
         game.local.vel.x = wish.normalize().x * speed;
         game.local.vel.z = wish.normalize().z * speed;
@@ -282,14 +293,19 @@ pub fn movement(
     if game.local.feet.y < -4.0 {
         let x = WORLD_X as i32 / 2;
         let z = WORLD_Z as i32 / 2;
-        game.local.feet = Vec3::new(x as f32 + 0.5, game.world.surface(x, z) as f32 + 1.0, z as f32 + 0.5);
+        game.local.feet = Vec3::new(
+            x as f32 + 0.5,
+            game.world.surface(x, z) as f32 + 1.0,
+            z as f32 + 0.5,
+        );
         game.local.vel = Vec3::ZERO;
     }
 
     if let Some(camera) = game.camera {
         if let Ok(mut t) = transforms.get_mut(camera) {
             t.translation = game.local.feet + Vec3::Y * EYE;
-            t.rotation = Quat::from_rotation_y(game.local.yaw) * Quat::from_rotation_x(game.local.pitch);
+            t.rotation =
+                Quat::from_rotation_y(game.local.yaw) * Quat::from_rotation_x(game.local.pitch);
         }
     }
 
@@ -303,7 +319,6 @@ pub fn movement(
             pitch: game.local.pitch,
         });
     }
-
 }
 
 #[cfg(test)]

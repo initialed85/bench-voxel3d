@@ -3,9 +3,9 @@
 use std::collections::{HashMap, HashSet};
 
 use bevy::prelude::*;
-use bevy::window::WindowResolution;
 #[cfg(target_arch = "wasm32")]
 use bevy::window::PrimaryWindow;
+use bevy::window::WindowResolution;
 use voxel_common::{block, chunk_index, Block, World, CHUNKS_X, CHUNKS_Y, CHUNKS_Z};
 
 pub const DEFAULT_SEED: i64 = 0x5EED_C0DE_1234_5678;
@@ -19,8 +19,16 @@ fn initial_canvas_size() -> (u32, u32) {
         let Some(win) = web_sys::window() else {
             return (1280, 720);
         };
-        let css_w = win.inner_width().ok().and_then(|v| v.as_f64()).unwrap_or(1280.0);
-        let css_h = win.inner_height().ok().and_then(|v| v.as_f64()).unwrap_or(720.0);
+        let css_w = win
+            .inner_width()
+            .ok()
+            .and_then(|v| v.as_f64())
+            .unwrap_or(1280.0);
+        let css_h = win
+            .inner_height()
+            .ok()
+            .and_then(|v| v.as_f64())
+            .unwrap_or(720.0);
         let dpr = win.device_pixel_ratio();
         ((css_w * dpr).round() as u32, (css_h * dpr).round() as u32)
     }
@@ -37,7 +45,10 @@ pub fn fit_canvas(mut windows: Query<&mut Window, With<PrimaryWindow>>) {
         return;
     };
     let (pw, ph) = initial_canvas_size();
-    if pw > 0 && ph > 0 && (window.resolution.physical_width() != pw || window.resolution.physical_height() != ph) {
+    if pw > 0
+        && ph > 0
+        && (window.resolution.physical_width() != pw || window.resolution.physical_height() != ph)
+    {
         window.resolution.set_physical_resolution(pw, ph);
     }
 }
@@ -130,7 +141,14 @@ pub fn all_chunks() -> u32 {
 /// visibility and ambient occlusion both reach across chunk borders.
 pub fn mark_dirty(game: &mut Game, x: i32, y: i32, z: i32) {
     game.dirty.insert(chunk_index(x as u32, y as u32, z as u32));
-    for (dx, dy, dz) in [(1, 0, 0), (-1, 0, 0), (0, 1, 0), (0, -1, 0), (0, 0, 1), (0, 0, -1)] {
+    for (dx, dy, dz) in [
+        (1, 0, 0),
+        (-1, 0, 0),
+        (0, 1, 0),
+        (0, -1, 0),
+        (0, 0, 1),
+        (0, 0, -1),
+    ] {
         let (nx, ny, nz) = (x + dx, y + dy, z + dz);
         if nx < 0 || ny < 0 || nz < 0 || nx >= 64 || ny >= 48 || nz >= 64 {
             continue;
@@ -161,17 +179,35 @@ pub fn run() {
     app.add_systems(Update, (net::connect, net::poll).chain());
     app.add_systems(
         Update,
-        (player::look, player::release, player::movement, player::hotbar, fit_canvas).chain(),
+        (
+            player::look,
+            player::release,
+            player::movement,
+            player::hotbar,
+            fit_canvas,
+        )
+            .chain(),
     );
     app.add_systems(
         Update,
-        (player::aim, player::click, mesher::rebuild, net::flush, hud::update).chain(),
+        (
+            player::aim,
+            player::click,
+            mesher::rebuild,
+            net::flush,
+            hud::update,
+        )
+            .chain(),
     );
 
     app.run();
 }
 
-fn setup(mut commands: Commands, mut meshes: ResMut<Assets<Mesh>>, mut materials: ResMut<Assets<StandardMaterial>>) {
+fn setup(
+    mut commands: Commands,
+    mut meshes: ResMut<Assets<Mesh>>,
+    mut materials: ResMut<Assets<StandardMaterial>>,
+) {
     let mut game = Game {
         white: materials.add(StandardMaterial::default()),
         cube: meshes.add(Cuboid::new(0.6, 1.8, 0.6)),

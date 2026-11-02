@@ -86,11 +86,18 @@ pub fn update(mut game: ResMut<Game>) {
         set("status", &status);
     }
 
-    let mut names: Vec<(u64, String)> = game.roster.iter().map(|(id, n)| (*id, n.clone())).collect();
+    let mut names: Vec<(u64, String)> =
+        game.roster.iter().map(|(id, n)| (*id, n.clone())).collect();
     names.sort();
     let roster = names
         .iter()
-        .map(|(id, n)| if *id == game.my_id { format!("{n} (you)") } else { n.clone() })
+        .map(|(id, n)| {
+            if *id == game.my_id {
+                format!("{n} (you)")
+            } else {
+                n.clone()
+            }
+        })
         .collect::<Vec<_>>()
         .join(", ");
     if roster != game.last_roster {

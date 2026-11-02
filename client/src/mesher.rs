@@ -3,7 +3,7 @@
 
 use bevy::mesh::{Indices, PrimitiveTopology};
 use bevy::prelude::*;
-use voxel_common::{block, CHUNK, CHUNKS_X, CHUNKS_Z, World};
+use voxel_common::{block, World, CHUNK, CHUNKS_X, CHUNKS_Z};
 
 use crate::{all_chunks, Game};
 
@@ -17,12 +17,42 @@ struct Face {
 // u x v == n, so the corner order (0,0) (1,0) (1,1) (0,1) is counter-clockwise
 // when viewed from outside the block.
 const FACES: [Face; 6] = [
-    Face { n: [1, 0, 0], u: [0, 1, 0], v: [0, 0, 1], shade: 0.72 },
-    Face { n: [-1, 0, 0], u: [0, 0, 1], v: [0, 1, 0], shade: 0.72 },
-    Face { n: [0, 1, 0], u: [0, 0, 1], v: [1, 0, 0], shade: 1.00 },
-    Face { n: [0, -1, 0], u: [1, 0, 0], v: [0, 0, 1], shade: 0.45 },
-    Face { n: [0, 0, 1], u: [1, 0, 0], v: [0, 1, 0], shade: 0.86 },
-    Face { n: [0, 0, -1], u: [0, 1, 0], v: [1, 0, 0], shade: 0.86 },
+    Face {
+        n: [1, 0, 0],
+        u: [0, 1, 0],
+        v: [0, 0, 1],
+        shade: 0.72,
+    },
+    Face {
+        n: [-1, 0, 0],
+        u: [0, 0, 1],
+        v: [0, 1, 0],
+        shade: 0.72,
+    },
+    Face {
+        n: [0, 1, 0],
+        u: [0, 0, 1],
+        v: [1, 0, 0],
+        shade: 1.00,
+    },
+    Face {
+        n: [0, -1, 0],
+        u: [1, 0, 0],
+        v: [0, 0, 1],
+        shade: 0.45,
+    },
+    Face {
+        n: [0, 0, 1],
+        u: [1, 0, 0],
+        v: [0, 1, 0],
+        shade: 0.86,
+    },
+    Face {
+        n: [0, 0, -1],
+        u: [0, 1, 0],
+        v: [1, 0, 0],
+        shade: 0.86,
+    },
 ];
 
 fn chunk_origin(chunk: u32) -> [u32; 3] {
@@ -87,10 +117,19 @@ pub fn build_chunk(world: &World, chunk: u32) -> Option<Mesh> {
                         ];
                         let blockers = world.solid(fo[0] + a[0], fo[1] + a[1], fo[2] + a[2]) as u32
                             + world.solid(fo[0] + b2[0], fo[1] + b2[1], fo[2] + b2[2]) as u32
-                            + world.solid(fo[0] + a[0] + b2[0], fo[1] + a[1] + b2[1], fo[2] + a[2] + b2[2]) as u32;
+                            + world.solid(
+                                fo[0] + a[0] + b2[0],
+                                fo[1] + a[1] + b2[1],
+                                fo[2] + a[2] + b2[2],
+                            ) as u32;
                         let ao = 1.0 - 0.21 * blockers as f32;
                         let shade = face.shade * ao;
-                        col.push([base_color[0] * shade, base_color[1] * shade, base_color[2] * shade, 1.0]);
+                        col.push([
+                            base_color[0] * shade,
+                            base_color[1] * shade,
+                            base_color[2] * shade,
+                            1.0,
+                        ]);
                     }
 
                     idx.extend([base, base + 1, base + 2, base, base + 2, base + 3]);
@@ -103,7 +142,10 @@ pub fn build_chunk(world: &World, chunk: u32) -> Option<Mesh> {
         return None;
     }
 
-    let mut mesh = Mesh::new(PrimitiveTopology::TriangleList, bevy::asset::RenderAssetUsages::RENDER_WORLD);
+    let mut mesh = Mesh::new(
+        PrimitiveTopology::TriangleList,
+        bevy::asset::RenderAssetUsages::RENDER_WORLD,
+    );
     mesh.insert_attribute(Mesh::ATTRIBUTE_POSITION, pos);
     mesh.insert_attribute(Mesh::ATTRIBUTE_NORMAL, norm);
     mesh.insert_attribute(Mesh::ATTRIBUTE_COLOR, col);

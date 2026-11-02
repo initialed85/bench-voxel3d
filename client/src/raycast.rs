@@ -17,9 +17,21 @@ pub fn raycast(world: &World, origin: Vec3, dir: Vec3, max_dist: f32) -> Option<
         if dir.z > 0.0 { 1 } else { -1 },
     ];
     let delta = [
-        if dir.x != 0.0 { (1.0 / dir.x).abs() } else { f32::INFINITY },
-        if dir.y != 0.0 { (1.0 / dir.y).abs() } else { f32::INFINITY },
-        if dir.z != 0.0 { (1.0 / dir.z).abs() } else { f32::INFINITY },
+        if dir.x != 0.0 {
+            (1.0 / dir.x).abs()
+        } else {
+            f32::INFINITY
+        },
+        if dir.y != 0.0 {
+            (1.0 / dir.y).abs()
+        } else {
+            f32::INFINITY
+        },
+        if dir.z != 0.0 {
+            (1.0 / dir.z).abs()
+        } else {
+            f32::INFINITY
+        },
     ];
     let mut t_max = [
         if dir.x > 0.0 {
@@ -91,7 +103,13 @@ mod tests {
     #[test]
     fn ray_hits_block_below_origin() {
         let w = flat_world();
-        let (cell, prev, _) = raycast(&w, Vec3::new(10.5, 25.0, 10.5), Vec3::new(0.0, -1.0, 0.0), 20.0).unwrap();
+        let (cell, prev, _) = raycast(
+            &w,
+            Vec3::new(10.5, 25.0, 10.5),
+            Vec3::new(0.0, -1.0, 0.0),
+            20.0,
+        )
+        .unwrap();
         assert_eq!(cell, [10, 20, 10]);
         assert_eq!(prev, [10, 21, 10]);
     }
@@ -99,19 +117,37 @@ mod tests {
     #[test]
     fn ray_misses_empty_space() {
         let w = flat_world();
-        assert!(raycast(&w, Vec3::new(30.5, 40.0, 30.5), Vec3::new(0.0, 1.0, 0.0), 10.0).is_none());
+        assert!(raycast(
+            &w,
+            Vec3::new(30.5, 40.0, 30.5),
+            Vec3::new(0.0, 1.0, 0.0),
+            10.0
+        )
+        .is_none());
     }
 
     #[test]
     fn ray_stops_at_max_distance() {
         let w = flat_world();
-        assert!(raycast(&w, Vec3::new(10.5, 24.0, 10.5), Vec3::new(0.0, -1.0, 0.0), 2.0).is_none());
+        assert!(raycast(
+            &w,
+            Vec3::new(10.5, 24.0, 10.5),
+            Vec3::new(0.0, -1.0, 0.0),
+            2.0
+        )
+        .is_none());
     }
 
     #[test]
     fn ray_hits_side_and_reports_placement_cell() {
         let w = flat_world();
-        let (cell, prev, _) = raycast(&w, Vec3::new(6.5, 20.5, 10.5), Vec3::new(1.0, 0.0, 0.0), 20.0).unwrap();
+        let (cell, prev, _) = raycast(
+            &w,
+            Vec3::new(6.5, 20.5, 10.5),
+            Vec3::new(1.0, 0.0, 0.0),
+            20.0,
+        )
+        .unwrap();
         assert_eq!(cell, [10, 20, 10]);
         assert_eq!(prev, [9, 20, 10]);
     }
@@ -119,8 +155,17 @@ mod tests {
     #[test]
     fn hit_distance_is_positive_and_on_the_face() {
         let w = flat_world();
-        let (cell, _, dist) = raycast(&w, Vec3::new(10.5, 25.0, 10.5), Vec3::new(0.0, -1.0, 0.0), 20.0).unwrap();
-        assert!(dist > 0.0, "distance must be forward along the ray, got {dist}");
+        let (cell, _, dist) = raycast(
+            &w,
+            Vec3::new(10.5, 25.0, 10.5),
+            Vec3::new(0.0, -1.0, 0.0),
+            20.0,
+        )
+        .unwrap();
+        assert!(
+            dist > 0.0,
+            "distance must be forward along the ray, got {dist}"
+        );
         let p = Vec3::new(10.5, 25.0, 10.5) + Vec3::new(0.0, -1.0, 0.0) * dist;
         assert!((p.y - (cell[1] as f32 + 1.0)).abs() < 1e-4);
         assert!((dist - 4.0).abs() < 1e-4);
@@ -129,8 +174,17 @@ mod tests {
     #[test]
     fn negative_axis_distance_is_positive() {
         let w = flat_world();
-        let (cell, _, dist) = raycast(&w, Vec3::new(10.5, 20.5, 14.5), Vec3::new(0.0, 0.0, -1.0), 20.0).unwrap();
+        let (cell, _, dist) = raycast(
+            &w,
+            Vec3::new(10.5, 20.5, 14.5),
+            Vec3::new(0.0, 0.0, -1.0),
+            20.0,
+        )
+        .unwrap();
         assert_eq!(cell, [10, 20, 10]);
-        assert!((dist - 3.5).abs() < 1e-4, "expected the z=11 face, got {dist}");
+        assert!(
+            (dist - 3.5).abs() < 1e-4,
+            "expected the z=11 face, got {dist}"
+        );
     }
 }

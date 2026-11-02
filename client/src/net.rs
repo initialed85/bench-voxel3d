@@ -72,7 +72,11 @@ pub fn player_name() -> String {
     #[cfg(target_arch = "wasm32")]
     {
         let name = query_param("name");
-        if name.is_empty() { "player".to_string() } else { name }
+        if name.is_empty() {
+            "player".to_string()
+        } else {
+            name
+        }
     }
     #[cfg(not(target_arch = "wasm32"))]
     {
@@ -98,7 +102,10 @@ fn ws_url() -> String {
             format!("{proto}//{host}/ws")
         } else {
             // Plain http dev server: the game server is a separate port.
-            let host = loc.as_ref().and_then(|l| l.hostname().ok()).unwrap_or_default();
+            let host = loc
+                .as_ref()
+                .and_then(|l| l.hostname().ok())
+                .unwrap_or_default();
             let host = if host.is_empty() { "localhost" } else { &host };
             format!("{proto}//{host}:3001/ws")
         }
@@ -149,7 +156,9 @@ fn connect_wasm(url: &str) {
     let inc = incoming().clone();
 
     let on_message = Closure::wrap(Box::new(move |ev: web_sys::MessageEvent| {
-        let Some(text) = ev.data().as_string() else { return };
+        let Some(text) = ev.data().as_string() else {
+            return;
+        };
         if let Ok(msg) = serde_json::from_str::<ServerMsg>(&text) {
             inc.lock().unwrap().push_back(msg);
         }
@@ -159,7 +168,9 @@ fn connect_wasm(url: &str) {
 
     let on_open = Closure::wrap(Box::new(|| {
         set_connected(true);
-        outgoing().lock().unwrap().push_back(ClientMsg::Hello { name: player_name() });
+        outgoing().lock().unwrap().push_back(ClientMsg::Hello {
+            name: player_name(),
+        });
     }) as Box<dyn FnMut()>);
     ws.set_onopen(Some(js_ref(&on_open)));
     on_open.forget();
@@ -178,7 +189,10 @@ fn connect_native(url: String) {
     use tokio_tungstenite::tungstenite::Message;
 
     std::thread::spawn(move || {
-        let rt = match tokio::runtime::Builder::new_current_thread().enable_all().build() {
+        let rt = match tokio::runtime::Builder::new_current_thread()
+            .enable_all()
+            .build()
+        {
             Ok(rt) => rt,
             Err(e) => {
                 eprintln!("runtime: {e}");
@@ -299,7 +313,10 @@ pub fn poll(
             } => {
                 game.my_id = id;
                 game.name = name.clone();
-                hud::log(&format!("connected as {name} seed {seed} spawn {:.0} {:.0} {:.0}", spawn[0], spawn[1], spawn[2]));
+                hud::log(&format!(
+                    "connected as {name} seed {seed} spawn {:.0} {:.0} {:.0}",
+                    spawn[0], spawn[1], spawn[2]
+                ));
                 game.roster.insert(id, name);
                 game.world = World::generate(seed);
                 game.dirty = (0..crate::all_chunks()).collect();
@@ -326,7 +343,12 @@ pub fn poll(
                 }
                 hud::log(&format!("{name} left"));
             }
-            ServerMsg::Move { id, pos, yaw, pitch } => {
+            ServerMsg::Move {
+                id,
+                pos,
+                yaw,
+                pitch,
+            } => {
                 if id == game.my_id {
                     continue;
                 }

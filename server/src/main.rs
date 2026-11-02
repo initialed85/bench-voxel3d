@@ -13,7 +13,9 @@ use futures_util::{SinkExt, StreamExt};
 use tokio::io::{AsyncReadExt, AsyncWriteExt};
 use tokio::net::TcpListener;
 use tokio_tungstenite::{accept_async, tungstenite::Message};
-use voxel_common::{block, ClientMsg, PlayerInfo, ServerMsg, World, SEED, WORLD_X, WORLD_Y, WORLD_Z};
+use voxel_common::{
+    block, ClientMsg, PlayerInfo, ServerMsg, World, SEED, WORLD_X, WORLD_Y, WORLD_Z,
+};
 
 const DEFAULT_PORT: u16 = 3001;
 
@@ -73,11 +75,11 @@ async fn main() {
     let web_dir = Arc::new(std::env::var("VOXEL_WEB").unwrap_or_else(|_| "web".to_string()));
 
     let listener = TcpListener::bind(("0.0.0.0", port)).await.unwrap();
-    println!("voxel server serving {} on http://0.0.0.0:{port} (ws at /ws)", web_dir);
     println!(
-        "world {}x{}x{} seed {SEED:#x}",
-        WORLD_X, WORLD_Y, WORLD_Z
+        "voxel server serving {} on http://0.0.0.0:{port} (ws at /ws)",
+        web_dir
     );
+    println!("world {}x{}x{} seed {SEED:#x}", WORLD_X, WORLD_Y, WORLD_Z);
 
     let state = Arc::new(Mutex::new(State {
         world: World::generate(SEED),
@@ -128,9 +130,16 @@ async fn handle(
         }
 
         if method != "GET" && method != "HEAD" {
-            respond(&mut stream, 405, "text/plain; charset=utf-8", b"method not allowed", "", true)
-                .await
-                .ok();
+            respond(
+                &mut stream,
+                405,
+                "text/plain; charset=utf-8",
+                b"method not allowed",
+                "",
+                true,
+            )
+            .await
+            .ok();
             return;
         }
 
@@ -203,7 +212,15 @@ async fn serve_file(
     let file = match static_path(root, request_path) {
         Some(p) => p,
         None => {
-            return respond(stream, 400, "text/plain; charset=utf-8", b"bad request", "", head_only).await;
+            return respond(
+                stream,
+                400,
+                "text/plain; charset=utf-8",
+                b"bad request",
+                "",
+                head_only,
+            )
+            .await;
         }
     };
 
@@ -242,7 +259,15 @@ async fn serve_file(
         }
         Err(e) => {
             let msg = format!("not found: {request_path} ({e})");
-            respond(stream, 404, "text/plain; charset=utf-8", msg.as_bytes(), "", head_only).await
+            respond(
+                stream,
+                404,
+                "text/plain; charset=utf-8",
+                msg.as_bytes(),
+                "",
+                head_only,
+            )
+            .await
         }
     }
 }
@@ -381,11 +406,21 @@ async fn run_ws(stream: tokio::net::TcpStream, addr: SocketAddr, state: Arc<Mute
             ClientMsg::Hello { .. } => {}
             ClientMsg::Move { pos, yaw, pitch } => {
                 state.lock().unwrap().clients.get_mut(&id).unwrap().pos = pos;
-                let out = ServerMsg::Move { id, pos, yaw, pitch };
+                let out = ServerMsg::Move {
+                    id,
+                    pos,
+                    yaw,
+                    pitch,
+                };
                 send(&state.lock().unwrap(), &out, id);
             }
             ClientMsg::Edit { pos, block: b } => {
-                if !state.lock().unwrap().world.in_bounds(pos[0], pos[1], pos[2]) {
+                if !state
+                    .lock()
+                    .unwrap()
+                    .world
+                    .in_bounds(pos[0], pos[1], pos[2])
+                {
                     continue;
                 }
                 if b > block::SNOW {
